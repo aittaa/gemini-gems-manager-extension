@@ -77,8 +77,14 @@ const App: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (!isPinned && visible && containerRef.current) {
         const path = event.composedPath();
+        
+        // Check if the click is inside the UI container
         const isInside = path.includes(containerRef.current);
-        const isToggleButton = (event.target as HTMLElement).closest('.gemini-gems-manager-toggle-btn');
+        
+        // Check if the click is on the toggle button (crossing Shadow DOM boundary)
+        const isToggleButton = path.some(el => 
+          el instanceof HTMLElement && el.classList.contains('gemini-gems-manager-toggle-btn')
+        );
 
         if (!isInside && !isToggleButton) {
           setVisible(false);
@@ -145,7 +151,10 @@ const App: React.FC = () => {
     <>
       <button 
         className="gemini-gems-manager-toggle-btn"
-        onClick={() => setVisible(!visible)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setVisible(!visible);
+        }}
         title="Toggle Gems List (Ctrl + .)"
         style={{
           position: 'fixed',
@@ -168,7 +177,7 @@ const App: React.FC = () => {
           transition: 'all 0.2s'
         }}
       >
-        💎
+        ⭐
       </button>
 
       {visible && (
