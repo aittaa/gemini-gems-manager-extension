@@ -13,53 +13,31 @@ const EmojiPicker: React.FC<{
   isDark: boolean;
 }> = ({ onSelect, onClose, anchorRect, pickerRef, isDark }) => {
   if (!anchorRect) return null;
-
   const bg = isDark ? '#282a2d' : '#ffffff';
   const border = isDark ? '#444746' : '#e0e0e0';
   const hover = isDark ? '#3c4043' : '#f1f3f4';
   const text = isDark ? '#e3e3e3' : '#1f1f1f';
 
   return (
-    <div 
-      ref={pickerRef}
-      className="gemini-gems-manager-emoji-picker"
-      style={{
-        position: 'fixed',
-        top: anchorRect.bottom + 8,
-        left: Math.max(20, anchorRect.left - 100),
-        zIndex: 10001,
-        background: bg,
-        padding: '12px',
-        borderRadius: '16px',
-        boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.15)',
-        border: `1px solid ${border}`,
-        width: '220px',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(5, 1fr)',
-        gap: '8px',
-        pointerEvents: 'auto'
-      }}
-    >
+    <div ref={pickerRef} style={{ position: 'fixed', top: anchorRect.bottom + 8, left: Math.max(20, anchorRect.left - 100), zIndex: 10001, background: bg, padding: '12px', borderRadius: '16px', boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.15)', border: `1px solid ${border}`, width: '220px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', pointerEvents: 'auto' }}>
       {COMMON_EMOJIS.map(emoji => (
-        <button
-          key={emoji}
-          onClick={(e) => { e.stopPropagation(); onSelect(emoji); onClose(); }}
-          style={{ border: 'none', background: 'none', fontSize: '22px', cursor: 'pointer', padding: '6px', borderRadius: '8px', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = hover}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-        >
-          {emoji}
-        </button>
+        <button key={emoji} onClick={(e) => { e.stopPropagation(); onSelect(emoji); onClose(); }} style={{ border: 'none', background: 'none', fontSize: '22px', cursor: 'pointer', padding: '6px', borderRadius: '8px', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = hover} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>{emoji}</button>
       ))}
       <div style={{ gridColumn: 'span 5', marginTop: '8px', borderTop: `1px solid ${hover}`, paddingTop: '8px' }}>
         <input 
           type="text" placeholder="Custom..." maxLength={2}
           onClick={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            const val = e.target.value;
+            const trimmed = Array.from(val).slice(0, 2).join('');
+            if (val !== trimmed) e.target.value = trimmed;
+          }}
           onKeyDown={e => {
             e.stopPropagation();
             if (e.key === 'Enter') {
               const val = (e.target as HTMLInputElement).value;
-              if (val) { onSelect(val); onClose(); }
+              const trimmed = Array.from(val).slice(0, 2).join('');
+              if (trimmed) { onSelect(trimmed); onClose(); }
             }
           }}
           style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${border}`, fontSize: '13px', color: text, background: isDark ? '#1e1f20' : '#f8f9fa', outline: 'none', boxSizing: 'border-box' }}
@@ -88,6 +66,7 @@ const App: React.FC = () => {
   const pickerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const filterBarRef = useRef<HTMLDivElement>(null);
+  const userInteractedRef = useRef(false);
 
   const loadSettings = async () => {
     const result = await getStorage(['gems', 'favorites', 'emojiMap', 'options']);
@@ -101,15 +80,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     loadSettings();
-    
-    // Detect Dark Mode
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setIsDark(document.documentElement.classList.contains('dark-theme') || darkModeMediaQuery.matches);
-    
-    const themeObserver = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark-theme') || document.body.classList.contains('dark-theme'));
-    });
+    const checkTheme = () => {
+      const isDarkTheme = document.documentElement.classList.contains('dark-theme') || document.body.classList.contains('dark-theme');
+      setIsDark(isDarkTheme);
+    };
+    checkTheme();
+    const themeObserver = new MutationObserver(checkTheme);
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
     const handleStorageChange = (changes: browser.Storage.StorageChange, area: string) => {
       if (area === 'local') {
@@ -141,6 +119,55 @@ const App: React.FC = () => {
       themeObserver.disconnect();
     };
   }, []);
+
+  // --- Focus Theft Protection & Restoration ---
+  useEffect(() => {
+    const handleCaptureMousedown = () => {
+      userInteractedRef.current = true;
+      setTimeout(() => { userInteractedRef.current = false; }, 200);
+    };
+
+    const handleFocus = (e: FocusEvent) => {
+      if (visible && inputRef.current && e.target !== inputRef.current) {
+        if (!userInteractedRef.current) {
+          inputRef.current.focus();
+        }
+      }
+    };
+
+    window.addEventListener('mousedown', handleCaptureMousedown, true);
+    window.addEventListener('focus', handleFocus, true);
+    return () => {
+      window.removeEventListener('mousedown', handleCaptureMousedown, true);
+      window.removeEventListener('focus', handleFocus, true);
+    };
+  }, [visible]);
+
+  // Restore focus to Gemini when closed
+  useEffect(() => {
+    if (!visible) {
+      setTimeout(() => {
+        // Try multiple selectors common in Gemini/Google AI apps
+        const selectors = [
+          'div[contenteditable="true"]',
+          'div[role="textbox"]',
+          'textarea[aria-label*="prompt"]',
+          '.ql-editor',
+          'input[type="text"]'
+        ];
+        
+        for (const selector of selectors) {
+          const el = document.querySelector(selector);
+          if (el instanceof HTMLElement) {
+            el.focus();
+            // Some editors need a click to truly activate
+            el.click();
+            break;
+          }
+        }
+      }, 100); // Slightly longer delay for stability
+    }
+  }, [visible]);
 
   const uniqueEmojis = useMemo(() => {
     const emojis = gems.map(g => emojiMap[g.id] || g.emoji || '💎');
@@ -185,17 +212,10 @@ const App: React.FC = () => {
     }
   }, [selectedIndex]);
 
-  // Scroll active filter into view
   useEffect(() => {
     if (filterBarRef.current) {
-      if (filterEmojiIndex === 0) {
-        filterBarRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        const activeFilter = filterBarRef.current.children[filterEmojiIndex] as HTMLElement;
-        if (activeFilter) {
-          activeFilter.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
-        }
-      }
+      const activeFilter = filterBarRef.current.children[filterEmojiIndex] as HTMLElement;
+      if (activeFilter) activeFilter.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
     }
   }, [filterEmojiIndex]);
 
@@ -277,7 +297,6 @@ const App: React.FC = () => {
     setEditingGemId(id);
   };
 
-  // Theme Colors
   const theme = {
     bg: isDark ? '#1e1f20' : '#ffffff',
     surface: isDark ? '#282a2d' : '#f8f9fa',
@@ -294,7 +313,6 @@ const App: React.FC = () => {
       <style>{`
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @font-face { font-family: 'Google Sans'; src: local('Google Sans'); }
       `}</style>
       
       <button 
@@ -310,8 +328,8 @@ const App: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 500 }}>Gems</h3>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={togglePin} title={isPinned ? "Unpin" : "Pin UI"} style={{ border: 'none', background: isPinned ? (isDark ? '#3c4043' : '#e8f0fe') : 'none', cursor: 'pointer', fontSize: '18px', color: isPinned ? theme.accent : theme.textSecondary, padding: '6px', borderRadius: '8px', display: 'flex', transition: 'all 0.2s' }}>📌</button>
-              <button onClick={(e) => { e.stopPropagation(); setVisible(false); }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '24px', color: theme.textSecondary, padding: '4px', display: 'flex', alignItems: 'center' }}>&times;</button>
+              <button onClick={togglePin} title={isPinned ? "Unpin" : "Pin UI"} style={{ border: 'none', background: isPinned ? (isDark ? '#3c4043' : '#e8f0fe') : 'none', cursor: 'pointer', fontSize: '16px', color: isPinned ? theme.accent : theme.textSecondary, padding: '6px', borderRadius: '8px', display: 'flex', transition: 'all 0.2s' }}>📌</button>
+              <button onClick={(e) => { e.stopPropagation(); setVisible(false); }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '20px', color: theme.textSecondary, padding: '4px', display: 'flex', alignItems: 'center' }}>&times;</button>
             </div>
           </div>
 
@@ -319,35 +337,20 @@ const App: React.FC = () => {
 
           <div ref={filterBarRef} className="hide-scrollbar" style={{ display: 'flex', gap: '10px', overflowX: 'auto', overflowY: 'hidden', alignItems: 'center', padding: '4px 0', marginBottom: '12px', scrollBehavior: 'smooth', minHeight: '44px' }}>
             {uniqueEmojis.map((emoji, index) => (
-              <button
-                key={index}
-                onClick={() => setFilterEmojiIndex(index)}
-                style={{ height: '34px', minWidth: '54px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', border: '1px solid', borderColor: filterEmojiIndex === index ? theme.accent : theme.border, background: filterEmojiIndex === index ? (isDark ? '#3c4043' : '#e8f0fe') : theme.bg, color: filterEmojiIndex === index ? theme.accent : theme.textSecondary, fontSize: '14px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0, boxSizing: 'border-box', padding: '0 14px', margin: 0 }}
-              >
+              <button key={index} onClick={() => setFilterEmojiIndex(index)} style={{ height: '34px', minWidth: '54px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', border: '1px solid', borderColor: filterEmojiIndex === index ? theme.accent : theme.border, background: filterEmojiIndex === index ? (isDark ? '#3c4043' : '#e8f0fe') : theme.bg, color: filterEmojiIndex === index ? theme.accent : theme.textSecondary, fontSize: '14px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0, boxSizing: 'border-box', padding: '0 14px', margin: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{emoji === 'All' ? 'All' : emoji}</div>
               </button>
             ))}
           </div>
 
-          <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }} ref={listRef}>
+          <div style={{ overflowY: 'auto', flex: 1, padding: '0 4px' }} ref={listRef}>
             {filteredGems.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '2px 0' }}>
                 {filteredGems.map((gem, index) => (
-                  <div key={gem.id} style={{ padding: '12px', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s', backgroundColor: selectedIndex === index ? theme.accentHover : 'transparent', outline: selectedIndex === index ? `1px solid ${theme.border}` : 'none' }} onMouseMove={() => setSelectedIndex(index)} onClick={() => { window.location.href = `https://gemini.google.com/gem/${gem.id}`; }}>
-                    <div 
-                      onClick={(e) => handleEmojiClick(e, gem.id)}
-                      style={{ width: '40px', height: '40px', borderRadius: '12px', background: gem.isFavorite ? (isDark ? '#4f3500' : '#fff4e5') : theme.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '14px', fontSize: '22px', flexShrink: 0, border: gem.isFavorite ? `1px solid ${isDark ? '#7e5700' : '#ffcc80'}` : '1px solid transparent' }}
-                      title="Click to change emoji"
-                    >
-                      {gem.emoji}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '15px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: theme.text }}>{gem.name}</div>
-                      {gem.description && <div style={{ fontSize: '12px', color: theme.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{gem.description}</div>}
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); toggleFavorite(gem.id); }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '20px', color: gem.isFavorite ? '#f9ab00' : theme.border, padding: '6px', transition: 'transform 0.1s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-                      {gem.isFavorite ? '★' : '☆'}
-                    </button>
+                  <div key={gem.id} style={{ padding: '12px', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s', backgroundColor: selectedIndex === index ? theme.accentHover : 'transparent', boxShadow: selectedIndex === index ? `inset 0 0 0 1px ${theme.border}` : 'none' }} onMouseMove={() => setSelectedIndex(index)} onClick={() => { window.location.href = `https://gemini.google.com/gem/${gem.id}`; }}>
+                    <div onClick={(e) => handleEmojiClick(e, gem.id)} style={{ width: '40px', height: '40px', borderRadius: '12px', background: gem.isFavorite ? (isDark ? '#4f3500' : '#fff4e5') : theme.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '14px', fontSize: '22px', flexShrink: 0, border: gem.isFavorite ? `1px solid ${isDark ? '#7e5700' : '#ffcc80'}` : '1px solid transparent' }} title="Click to change emoji">{gem.emoji}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: '15px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: theme.text }}>{gem.name}</div>{gem.description && <div style={{ fontSize: '12px', color: theme.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{gem.description}</div>}</div>
+                    <button onClick={(e) => { e.stopPropagation(); toggleFavorite(gem.id); }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '20px', color: gem.isFavorite ? '#f9ab00' : theme.border, padding: '6px', transition: 'transform 0.1s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>{gem.isFavorite ? '★' : '☆'}</button>
                   </div>
                 ))}
               </div>
@@ -363,13 +366,7 @@ const App: React.FC = () => {
       )}
 
       {editingGemId && (
-        <EmojiPicker 
-          onSelect={(emoji) => updateEmoji(editingGemId, emoji)}
-          onClose={() => setEditingGemId(null)}
-          anchorRect={pickerAnchor}
-          pickerRef={pickerRef}
-          isDark={isDark}
-        />
+        <EmojiPicker onSelect={(emoji) => updateEmoji(editingGemId, emoji)} onClose={() => setEditingGemId(null)} anchorRect={pickerAnchor} pickerRef={pickerRef} isDark={isDark} />
       )}
     </>
   );
