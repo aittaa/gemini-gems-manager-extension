@@ -19,29 +19,12 @@ const EmojiPicker: React.FC<{
   const text = isDark ? '#e3e3e3' : '#1f1f1f';
 
   return (
-    <div ref={pickerRef} style={{ position: 'fixed', top: anchorRect.bottom + 8, left: Math.max(20, anchorRect.left - 100), zIndex: 10001, background: bg, padding: '12px', borderRadius: '16px', boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.15)', border: `1px solid ${border}`, width: '220px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', pointerEvents: 'auto' }}>
+    <div ref={pickerRef} style={{ position: 'fixed', top: anchorRect.bottom + 8, left: Math.max(20, anchorRect.left - 100), zIndex: 10001, background: bg, padding: '10px', borderRadius: '12px', boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(0,0,0,0.15)', border: `1px solid ${border}`, width: '200px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', pointerEvents: 'auto' }}>
       {COMMON_EMOJIS.map(emoji => (
-        <button key={emoji} onClick={(e) => { e.stopPropagation(); onSelect(emoji); onClose(); }} style={{ border: 'none', background: 'none', fontSize: '22px', cursor: 'pointer', padding: '6px', borderRadius: '8px', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = hover} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>{emoji}</button>
+        <button key={emoji} onClick={(e) => { e.stopPropagation(); onSelect(emoji); onClose(); }} style={{ border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer', padding: '4px', borderRadius: '8px', transition: 'background 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = hover} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>{emoji}</button>
       ))}
-      <div style={{ gridColumn: 'span 5', marginTop: '8px', borderTop: `1px solid ${hover}`, paddingTop: '8px' }}>
-        <input 
-          type="text" placeholder="Custom..." maxLength={2}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => {
-            const val = e.target.value;
-            const trimmed = Array.from(val).slice(0, 2).join('');
-            if (val !== trimmed) e.target.value = trimmed;
-          }}
-          onKeyDown={e => {
-            e.stopPropagation();
-            if (e.key === 'Enter') {
-              const val = (e.target as HTMLInputElement).value;
-              const trimmed = Array.from(val).slice(0, 2).join('');
-              if (trimmed) { onSelect(trimmed); onClose(); }
-            }
-          }}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${border}`, fontSize: '13px', color: text, background: isDark ? '#1e1f20' : '#f8f9fa', outline: 'none', boxSizing: 'border-box' }}
-        />
+      <div style={{ gridColumn: 'span 5', marginTop: '6px', borderTop: `1px solid ${hover}`, paddingTop: '6px' }}>
+        <input type="text" placeholder="Custom..." maxLength={2} onClick={(e) => e.stopPropagation()} onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') { const val = (e.target as HTMLInputElement).value; if (val) { onSelect(val); onClose(); } } }} style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${border}`, fontSize: '12px', color: text, background: isDark ? '#1e1f20' : '#f8f9fa', outline: 'none', boxSizing: 'border-box' }} />
       </div>
     </div>
   );
@@ -120,21 +103,16 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // --- Focus Theft Protection & Restoration ---
   useEffect(() => {
     const handleCaptureMousedown = () => {
       userInteractedRef.current = true;
       setTimeout(() => { userInteractedRef.current = false; }, 200);
     };
-
     const handleFocus = (e: FocusEvent) => {
-      if (visible && inputRef.current && e.target !== inputRef.current) {
-        if (!userInteractedRef.current) {
-          inputRef.current.focus();
-        }
+      if (visible && inputRef.current && e.target !== inputRef.current && !userInteractedRef.current) {
+        inputRef.current.focus();
       }
     };
-
     window.addEventListener('mousedown', handleCaptureMousedown, true);
     window.addEventListener('focus', handleFocus, true);
     return () => {
@@ -143,29 +121,15 @@ const App: React.FC = () => {
     };
   }, [visible]);
 
-  // Restore focus to Gemini when closed
   useEffect(() => {
     if (!visible) {
       setTimeout(() => {
-        // Try multiple selectors common in Gemini/Google AI apps
-        const selectors = [
-          'div[contenteditable="true"]',
-          'div[role="textbox"]',
-          'textarea[aria-label*="prompt"]',
-          '.ql-editor',
-          'input[type="text"]'
-        ];
-        
+        const selectors = ['div[contenteditable="true"]', 'div[role="textbox"]', 'textarea[aria-label*="prompt"]', '.ql-editor', 'input[type="text"]'];
         for (const selector of selectors) {
           const el = document.querySelector(selector);
-          if (el instanceof HTMLElement) {
-            el.focus();
-            // Some editors need a click to truly activate
-            el.click();
-            break;
-          }
+          if (el instanceof HTMLElement) { el.focus(); el.click(); break; }
         }
-      }, 100); // Slightly longer delay for stability
+      }, 100);
     }
   }, [visible]);
 
@@ -175,21 +139,14 @@ const App: React.FC = () => {
   }, [gems, emojiMap]);
 
   const filteredGems = useMemo(() => {
-    let list = gems.map(gem => ({
-      ...gem,
-      emoji: emojiMap[gem.id] || gem.emoji || '💎',
-      isFavorite: favorites.includes(gem.id)
-    }));
+    let list = gems.map(gem => ({ ...gem, emoji: emojiMap[gem.id] || gem.emoji || '💎', isFavorite: favorites.includes(gem.id) }));
     if (filterEmojiIndex > 0) {
       const targetEmoji = uniqueEmojis[filterEmojiIndex];
       list = list.filter(gem => gem.emoji === targetEmoji);
     }
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
-      list = list.filter(gem => 
-        (gem.name && gem.name.toLowerCase().includes(lowerQuery)) || 
-        (typeof gem.description === 'string' && gem.description.toLowerCase().includes(lowerQuery))
-      );
+      list = list.filter(gem => (gem.name && gem.name.toLowerCase().includes(lowerQuery)) || (typeof gem.description === 'string' && gem.description.toLowerCase().includes(lowerQuery)));
     }
     return list.sort((a, b) => {
       if (a.isFavorite && !b.isFavorite) return -1;
@@ -198,16 +155,13 @@ const App: React.FC = () => {
     });
   }, [gems, favorites, emojiMap, searchQuery, filterEmojiIndex, uniqueEmojis]);
 
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [filteredGems.length, searchQuery, filterEmojiIndex]);
+  useEffect(() => { setSelectedIndex(0); }, [filteredGems.length, searchQuery, filterEmojiIndex]);
 
   useEffect(() => {
     if (listRef.current) {
       const wrapper = listRef.current.firstElementChild;
       if (wrapper && wrapper.children[selectedIndex]) {
-        const selectedEl = wrapper.children[selectedIndex] as HTMLElement;
-        selectedEl.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+        (wrapper.children[selectedIndex] as HTMLElement).scrollIntoView({ block: 'nearest', behavior: 'auto' });
       }
     }
   }, [selectedIndex]);
@@ -215,13 +169,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (filterBarRef.current) {
       const activeFilter = filterBarRef.current.children[filterEmojiIndex] as HTMLElement;
-      if (activeFilter) activeFilter.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+      if (activeFilter) activeFilter.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'auto' });
     }
   }, [filterEmojiIndex]);
 
-  useEffect(() => {
-    if (visible && inputRef.current) inputRef.current.focus();
-  }, [visible]);
+  useEffect(() => { if (visible && inputRef.current) inputRef.current.focus(); }, [visible]);
 
   const handleGlobalKeydown = (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === '.') setVisible(prev => !prev);
@@ -238,20 +190,11 @@ const App: React.FC = () => {
 
   const handleInputKeydown = (e: React.KeyboardEvent) => {
     if (editingGemId) return;
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (filteredGems.length > 0) setSelectedIndex(prev => (prev + 1) % filteredGems.length);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (filteredGems.length > 0) setSelectedIndex(prev => (prev - 1 + filteredGems.length) % filteredGems.length);
-    } else if (e.key === 'ArrowRight') {
-      setFilterEmojiIndex(prev => (prev + 1) % uniqueEmojis.length);
-    } else if (e.key === 'ArrowLeft') {
-      setFilterEmojiIndex(prev => (prev - 1 + uniqueEmojis.length) % uniqueEmojis.length);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (filteredGems[selectedIndex]) window.location.href = `https://gemini.google.com/gem/${filteredGems[selectedIndex].id}`;
-    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (filteredGems.length > 0) setSelectedIndex(prev => (prev + 1) % filteredGems.length); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (filteredGems.length > 0) setSelectedIndex(prev => (prev - 1 + filteredGems.length) % filteredGems.length); }
+    else if (e.key === 'ArrowRight') { setFilterEmojiIndex(prev => (prev + 1) % uniqueEmojis.length); }
+    else if (e.key === 'ArrowLeft') { setFilterEmojiIndex(prev => (prev - 1 + uniqueEmojis.length) % uniqueEmojis.length); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (filteredGems[selectedIndex]) window.location.href = `https://gemini.google.com/gem/${filteredGems[selectedIndex].id}`; }
   };
 
   useEffect(() => {
@@ -310,66 +253,55 @@ const App: React.FC = () => {
 
   return (
     <>
-      <style>{`
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+      <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
       
       <button 
         className="gemini-gems-manager-toggle-btn"
         onClick={(e) => { e.stopPropagation(); setVisible(!visible); }}
-        style={{ position: 'fixed', top: '80px', right: '20px', zIndex: 10000, width: '40px', height: '40px', borderRadius: '12px', background: visible ? theme.accent : theme.bg, color: visible ? '#ffffff' : theme.textSecondary, border: `1px solid ${theme.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', pointerEvents: 'auto', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}
+        style={{ position: 'fixed', top: '80px', right: '20px', zIndex: 10000, width: '32px', height: '32px', borderRadius: '10px', background: visible ? theme.accent : theme.bg, color: visible ? '#ffffff' : theme.textSecondary, border: `1px solid ${theme.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', pointerEvents: 'auto', transition: 'all 0.2s' }}
       >
         ⭐
       </button>
 
       {visible && (
-        <div ref={containerRef} onKeyDown={handleInputKeydown} style={{ position: 'fixed', top: '130px', right: '20px', zIndex: 9999, background: theme.bg, padding: '20px', borderRadius: '24px', boxShadow: theme.shadow, width: '340px', fontFamily: '"Google Sans", Roboto, Arial, sans-serif', display: 'flex', flexDirection: 'column', maxHeight: '75vh', border: `1px solid ${theme.border}`, color: theme.text, pointerEvents: 'auto', transition: 'opacity 0.2s' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 500 }}>Gems</h3>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={togglePin} title={isPinned ? "Unpin" : "Pin UI"} style={{ border: 'none', background: isPinned ? (isDark ? '#3c4043' : '#e8f0fe') : 'none', cursor: 'pointer', fontSize: '16px', color: isPinned ? theme.accent : theme.textSecondary, padding: '6px', borderRadius: '8px', display: 'flex', transition: 'all 0.2s' }}>📌</button>
+        <div ref={containerRef} onKeyDown={handleInputKeydown} style={{ position: 'fixed', top: '120px', right: '20px', zIndex: 9999, background: theme.bg, padding: '16px', borderRadius: '20px', boxShadow: theme.shadow, width: '300px', fontFamily: '"Google Sans", Roboto, Arial, sans-serif', display: 'flex', flexDirection: 'column', maxHeight: '75vh', border: `1px solid ${theme.border}`, color: theme.text, pointerEvents: 'auto', transition: 'opacity 0.2s' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 500 }}>Gems</h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={togglePin} title={isPinned ? "Unpin" : "Pin UI"} style={{ border: 'none', background: isPinned ? (isDark ? '#3c4043' : '#e8f0fe') : 'none', cursor: 'pointer', fontSize: '16px', color: isPinned ? theme.accent : theme.textSecondary, padding: '4px', borderRadius: '6px', display: 'flex' }}>📌</button>
               <button onClick={(e) => { e.stopPropagation(); setVisible(false); }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '20px', color: theme.textSecondary, padding: '4px', display: 'flex', alignItems: 'center' }}>&times;</button>
             </div>
           </div>
 
-          <input ref={inputRef} type="text" placeholder="Search Gems..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.border}`, fontSize: '15px', outline: 'none', marginBottom: '12px', boxSizing: 'border-box', backgroundColor: theme.surface, color: theme.text, transition: 'border-color 0.2s' }} />
+          <input ref={inputRef} type="text" placeholder="Search Gems..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${theme.border}`, fontSize: '14px', outline: 'none', marginBottom: '8px', boxSizing: 'border-box', backgroundColor: theme.surface, color: theme.text }} />
 
-          <div ref={filterBarRef} className="hide-scrollbar" style={{ display: 'flex', gap: '10px', overflowX: 'auto', overflowY: 'hidden', alignItems: 'center', padding: '4px 0', marginBottom: '12px', scrollBehavior: 'smooth', minHeight: '44px' }}>
+          <div ref={filterBarRef} className="hide-scrollbar" style={{ display: 'flex', gap: '8px', overflowX: 'auto', overflowY: 'hidden', alignItems: 'center', padding: '2px 16px', margin: '0 -16px 8px -16px', scrollBehavior: 'smooth', minHeight: '36px' }}>
             {uniqueEmojis.map((emoji, index) => (
-              <button key={index} onClick={() => setFilterEmojiIndex(index)} style={{ height: '34px', minWidth: '54px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', border: '1px solid', borderColor: filterEmojiIndex === index ? theme.accent : theme.border, background: filterEmojiIndex === index ? (isDark ? '#3c4043' : '#e8f0fe') : theme.bg, color: filterEmojiIndex === index ? theme.accent : theme.textSecondary, fontSize: '14px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0, boxSizing: 'border-box', padding: '0 14px', margin: 0 }}>
+              <button key={index} onClick={() => setFilterEmojiIndex(index)} style={{ height: '30px', minWidth: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid', borderColor: filterEmojiIndex === index ? theme.accent : theme.border, background: filterEmojiIndex === index ? (isDark ? '#3c4043' : '#e8f0fe') : theme.bg, color: filterEmojiIndex === index ? theme.accent : theme.textSecondary, fontSize: '13px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0, boxSizing: 'border-box', padding: '0 12px', margin: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{emoji === 'All' ? 'All' : emoji}</div>
               </button>
             ))}
           </div>
 
-          <div style={{ overflowY: 'auto', flex: 1, padding: '0 4px' }} ref={listRef}>
+          <div style={{ overflowY: 'auto', flex: 1, padding: '0 2px' }} ref={listRef}>
             {filteredGems.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '2px 0' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '2px 0' }}>
                 {filteredGems.map((gem, index) => (
-                  <div key={gem.id} style={{ padding: '12px', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s', backgroundColor: selectedIndex === index ? theme.accentHover : 'transparent', boxShadow: selectedIndex === index ? `inset 0 0 0 1px ${theme.border}` : 'none' }} onMouseMove={() => setSelectedIndex(index)} onClick={() => { window.location.href = `https://gemini.google.com/gem/${gem.id}`; }}>
-                    <div onClick={(e) => handleEmojiClick(e, gem.id)} style={{ width: '40px', height: '40px', borderRadius: '12px', background: gem.isFavorite ? (isDark ? '#4f3500' : '#fff4e5') : theme.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '14px', fontSize: '22px', flexShrink: 0, border: gem.isFavorite ? `1px solid ${isDark ? '#7e5700' : '#ffcc80'}` : '1px solid transparent' }} title="Click to change emoji">{gem.emoji}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: '15px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: theme.text }}>{gem.name}</div>{gem.description && <div style={{ fontSize: '12px', color: theme.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{gem.description}</div>}</div>
-                    <button onClick={(e) => { e.stopPropagation(); toggleFavorite(gem.id); }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '20px', color: gem.isFavorite ? '#f9ab00' : theme.border, padding: '6px', transition: 'transform 0.1s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>{gem.isFavorite ? '★' : '☆'}</button>
+                  <div key={gem.id} style={{ padding: '10px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s', backgroundColor: selectedIndex === index ? theme.accentHover : 'transparent', boxShadow: selectedIndex === index ? `inset 0 0 0 1px ${theme.border}` : 'none' }} onMouseMove={() => setSelectedIndex(index)} onClick={() => { window.location.href = `https://gemini.google.com/gem/${gem.id}`; }}>
+                    <div onClick={(e) => handleEmojiClick(e, gem.id)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: gem.isFavorite ? (isDark ? '#4f3500' : '#fff4e5') : theme.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', fontSize: '20px', flexShrink: 0, border: gem.isFavorite ? `1px solid ${isDark ? '#7e5700' : '#ffcc80'}` : '1px solid transparent' }} title="Click to change emoji">{gem.emoji}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: theme.text }}>{gem.name}</div>{gem.description && <div style={{ fontSize: '11px', color: theme.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{gem.description}</div>}</div>
+                    <button onClick={(e) => { e.stopPropagation(); toggleFavorite(gem.id); }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '18px', color: gem.isFavorite ? '#f9ab00' : theme.border, padding: '4px', transition: 'transform 0.1s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>{gem.isFavorite ? '★' : '☆'}</button>
                   </div>
                 ))}
               </div>
             ) : (
-              <p style={{ textAlign: 'center', color: theme.textSecondary, fontSize: '14px', marginTop: '20px' }}>No Gems found</p>
+              <p style={{ textAlign: 'center', color: theme.textSecondary, fontSize: '13px', marginTop: '16px' }}>No Gems found</p>
             )}
           </div>
 
-          <div style={{ marginTop: '20px', fontSize: '12px', color: theme.textSecondary, textAlign: 'center', paddingTop: '16px', borderTop: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-              <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>↑↓</kbd> Select
-              <span style={{ margin: '0 4px', opacity: 0.5 }}>|</span>
-              <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>←→</kbd> Filter
-              <span style={{ margin: '0 4px', opacity: 0.5 }}>|</span>
-              <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>Enter</kbd> Open
-            </div>
-            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', opacity: 0.8 }}>
-              <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>Ctrl</kbd> + <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>.</kbd> to toggle
-            </div>
+          <div style={{ marginTop: '16px', fontSize: '11px', color: theme.textSecondary, textAlign: 'center', paddingTop: '12px', borderTop: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}><kbd style={{ padding: '2px 4px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.text }}>↑↓</kbd> Select <span style={{ opacity: 0.5 }}>|</span> <kbd style={{ padding: '2px 4px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.text }}>←→</kbd> Filter <span style={{ opacity: 0.5 }}>|</span> <kbd style={{ padding: '2px 4px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.text }}>Enter</kbd> Open</div>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', opacity: 0.8 }}><kbd style={{ padding: '2px 4px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.text }}>Ctrl</kbd> + <kbd style={{ padding: '2px 4px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.text }}>.</kbd> to toggle</div>
           </div>
         </div>
       )}
