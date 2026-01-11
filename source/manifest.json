@@ -4,10 +4,10 @@
   "version": "0.0.1",
 
   "icons": {
-    "16": "assets/icons/icon.svg",
-    "32": "assets/icons/icon.svg",
-    "48": "assets/icons/icon.svg",
-    "128": "assets/icons/icon.svg"
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
   },
   "description": "Powerful Gems management tool for Google Gemini.",
   "homepage_url": "https://github.com/aittaa/gemini-gems-manager-extension",
@@ -46,10 +46,10 @@
   "action": {
     "default_popup": "Popup/popup.html",
     "default_icon": {
-      "16": "assets/icons/icon.svg",
-      "32": "assets/icons/icon.svg",
-      "48": "assets/icons/icon.svg",
-      "128": "assets/icons/icon.svg"
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
     },
     "default_title": "Gems Manager for Google Gemini"
   },
