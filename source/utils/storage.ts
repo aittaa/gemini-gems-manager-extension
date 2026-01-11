@@ -1,30 +1,14 @@
 import browser from 'webextension-polyfill';
-import {StorageSchema, defaultStorage} from '../types/storage';
+import { LocalStorage } from '../types/storage';
 
-export async function getStorage<K extends keyof StorageSchema>(
-  keys: K[]
-): Promise<Pick<StorageSchema, K>> {
-  const result = await browser.storage.local.get(keys);
+export type LocalStorageKeys = keyof LocalStorage;
 
-  const output = {} as Pick<StorageSchema, K>;
-  for (const key of keys) {
-    output[key] = (result[key] as StorageSchema[K]) ?? defaultStorage[key];
-  }
-
-  return output;
+export function getStorage<Key extends LocalStorageKeys>(
+  keys: Key[]
+): Promise<Pick<LocalStorage, Key>> {
+  return browser.storage.local.get(keys) as Promise<Pick<LocalStorage, Key>>;
 }
 
-export async function setStorage<K extends keyof StorageSchema>(
-  items: Pick<StorageSchema, K>
-): Promise<void> {
-  await browser.storage.local.set(items);
-}
-
-export async function getAllStorage(): Promise<StorageSchema> {
-  const result = await browser.storage.local.get(null);
-
-  return {
-    ...defaultStorage,
-    ...result,
-  };
+export function setStorage(items: Partial<LocalStorage>): Promise<void> {
+  return browser.storage.local.set(items);
 }

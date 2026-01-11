@@ -1,11 +1,21 @@
-export interface StorageSchema {
-  username: string;
-  enableLogging: boolean;
-  visitCount: number;
+import { Gem } from './messages';
+
+export interface LocalStorage {
+  gems: Gem[];
+  favorites: string[]; // List of Gem IDs
+  emojiMap: Record<string, string>; // Gem ID -> Emoji
+  options: {
+    showInEmptyState: boolean;
+    showInChat: boolean;
+  };
 }
 
-export const defaultStorage: StorageSchema = {
-  username: '',
-  enableLogging: false,
-  visitCount: 0,
+export const defaultStorage: LocalStorage = {
+  gems: [],
+  favorites: [],
+  emojiMap: {},
+  options: {
+    showInEmptyState: true,
+    showInChat: true,
+  },
 };
