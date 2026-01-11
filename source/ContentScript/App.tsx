@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import browser from 'webextension-polyfill';
 import { getStorage, setStorage } from '../utils/storage';
 import { Gem } from '../types/messages';
@@ -8,8 +8,9 @@ const App: React.FC = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [emojiMap, setEmojiMap] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState('');
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Initial load
@@ -45,6 +46,25 @@ const App: React.FC = () => {
     window.addEventListener('keydown', handleKeydown);
     return () => window.removeEventListener('keydown', handleKeydown);
   }, []);
+
+  // Handle outside clicks to close if not pinned
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!isPinned && visible && containerRef.current) {
+        // Use composedPath to detect clicks inside Shadow DOM correctly
+        const path = event.composedPath();
+        const isInside = path.includes(containerRef.current);
+        const isToggleButton = (event.target as HTMLElement).closest('.gemini-gems-manager-toggle-btn');
+
+        if (!isInside && !isToggleButton) {
+          setVisible(false);
+        }
+      }
+    };
+
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, [visible, isPinned]);
 
   const toggleFavorite = (id: string) => {
     const newFavorites = favorites.includes(id) 
@@ -83,200 +103,238 @@ const App: React.FC = () => {
     });
   }, [gems, favorites, emojiMap, searchQuery]);
 
-  if (!visible && !isPinned) return null;
-
   return (
-    <div style={{
-      position: 'fixed',
-      top: '60px',
-      right: '20px',
-      zIndex: 9999,
-      background: '#ffffff',
-      padding: '16px',
-      borderRadius: '16px',
-      boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-      width: '320px',
-      fontFamily: 'Google Sans, Roboto, Arial, sans-serif',
-      display: 'flex',
-      flexDirection: 'column',
-      maxHeight: '75vh',
-      border: '1px solid #e0e0e0',
-      color: '#1f1f1f',
-      transition: 'opacity 0.2s'
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 500 }}>Gemini Gems</h3>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button 
-            onClick={() => setIsPinned(!isPinned)}
-            title={isPinned ? "Unpin" : "Pin UI"}
-            style={{ 
-              border: 'none', 
-              background: isPinned ? '#e8f0fe' : 'none', 
-              cursor: 'pointer', 
-              fontSize: '16px',
-              color: isPinned ? '#1a73e8' : '#5f6368',
-              padding: '4px',
-              borderRadius: '4px'
-            }}
-          >
-            📌
-          </button>
-          <button 
-            onClick={() => setVisible(false)}
-            style={{ 
-              border: 'none', 
-              background: 'none', 
-              cursor: 'pointer', 
-              fontSize: '20px',
-              color: '#5f6368',
-              padding: '4px'
-            }}
-          >
-            &times;
-          </button>
-        </div>
-      </div>
-
-      <input
-        type="text"
-        placeholder="Search your Gems..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        autoFocus
+    <>
+      {/* Floating toggle button - Always visible */}
+      <button 
+        className="gemini-gems-manager-toggle-btn"
+        onClick={() => setVisible(!visible)}
+        title="Toggle Gems List (Ctrl + .)"
         style={{
-          width: '100%',
-          padding: '12px',
-          borderRadius: '10px',
+          position: 'fixed',
+          top: '80px', // Lowered to avoid account icon
+          right: '20px',
+          zIndex: 10000,
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          background: visible ? '#1a73e8' : '#ffffff',
+          color: visible ? '#ffffff' : '#5f6368',
           border: '1px solid #dadce0',
-          fontSize: '14px',
-          outline: 'none',
-          marginBottom: '16px',
-          boxSizing: 'border-box',
-          backgroundColor: '#f8f9fa'
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '20px',
+          pointerEvents: 'auto',
+          transition: 'all 0.2s'
         }}
-      />
+      >
+        💎
+      </button>
 
-      <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
-        {filteredGems.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {filteredGems.map(gem => (
-              <div 
-                key={gem.id} 
+      {/* Main UI List */}
+      {visible && (
+        <div 
+          ref={containerRef}
+          style={{
+            position: 'fixed',
+            top: '125px', // Adjusted to align with new button position
+            right: '20px',
+            zIndex: 9999,
+            background: '#ffffff',
+            padding: '16px',
+            borderRadius: '16px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+            width: '320px',
+            fontFamily: 'Google Sans, Roboto, Arial, sans-serif',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '70vh',
+            border: '1px solid #e0e0e0',
+            color: '#1f1f1f',
+            pointerEvents: 'auto'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 500 }}>Gemini Gems</h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                onClick={() => setIsPinned(!isPinned)}
+                title={isPinned ? "Unpin" : "Pin UI"}
                 style={{ 
-                  padding: '10px', 
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  transition: 'background 0.2s',
+                  border: 'none', 
+                  background: isPinned ? '#e8f0fe' : 'none', 
+                  cursor: 'pointer', 
+                  fontSize: '16px',
+                  color: isPinned ? '#1a73e8' : '#5f6368',
+                  padding: '4px',
+                  borderRadius: '4px'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f3f4'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                <div 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const emoji = prompt('Enter an emoji for this Gem:', gem.emoji || '💎');
-                    if (emoji !== null) updateEmoji(gem.id, emoji);
-                  }}
-                  style={{ 
-                    width: '36px', 
-                    height: '36px', 
-                    borderRadius: '10px', 
-                    background: gem.isFavorite ? '#fff4e5' : '#e8f0fe', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    marginRight: '12px',
-                    fontSize: '20px',
-                    flexShrink: 0,
-                    border: gem.isFavorite ? '1px solid #ffcc80' : '1px solid transparent'
-                  }}
-                  title="Click to change emoji"
-                >
-                  {gem.emoji || '💎'}
-                </div>
-                <div 
-                  style={{ flex: 1, minWidth: 0 }}
-                  onClick={() => {
-                    window.location.href = `https://gemini.google.com/gem/${gem.id}`;
-                  }}
-                >
-                  <div style={{ 
-                    fontSize: '14px', 
-                    fontWeight: 500,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    {gem.name}
-                  </div>
-                  {gem.description && (
-                     <div style={{ 
-                      fontSize: '11px', 
-                      color: '#5f6368',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}>
-                      {gem.description}
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(gem.id);
-                  }}
-                  style={{
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                    color: gem.isFavorite ? '#f9ab00' : '#dadce0',
-                    padding: '4px',
-                    transition: 'transform 0.1s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  {gem.isFavorite ? '★' : '☆'}
-                </button>
-              </div>
-            ))}
+                📌
+              </button>
+              <button 
+                onClick={() => setVisible(false)}
+                style={{ 
+                  border: 'none', 
+                  background: 'none', 
+                  cursor: 'pointer', 
+                  fontSize: '20px',
+                  color: '#5f6368',
+                  padding: '4px'
+                }}
+              >
+                &times;
+              </button>
+            </div>
           </div>
-        ) : (
-          <p style={{ textAlign: 'center', color: '#5f6368', fontSize: '14px', marginTop: '20px' }}>
-            No Gems found
-          </p>
-        )}
-      </div>
 
-      <div style={{ 
-        marginTop: '16px', 
-        fontSize: '11px', 
-        color: '#70757a', 
-        textAlign: 'center',
-        paddingTop: '12px',
-        borderTop: '1px solid #f1f3f4'
-      }}>
-        <kbd style={{ 
-          padding: '2px 6px', 
-          background: '#f1f3f4', 
-          border: '1px solid #dadce0',
-          borderRadius: '4px',
-          boxShadow: '0 1px 1px rgba(0,0,0,0.1)',
-          marginRight: '4px'
-        }}>Ctrl</kbd> + <kbd style={{ 
-          padding: '2px 6px', 
-          background: '#f1f3f4', 
-          border: '1px solid #dadce0',
-          borderRadius: '4px',
-          boxShadow: '0 1px 1px rgba(0,0,0,0.1)'
-        }}>.</kbd> to toggle
-      </div>
-    </div>
+          <input
+            type="text"
+            placeholder="Search your Gems..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '10px',
+              border: '1px solid #dadce0',
+              fontSize: '14px',
+              outline: 'none',
+              marginBottom: '16px',
+              boxSizing: 'border-box',
+              backgroundColor: '#f8f9fa',
+              color: '#1f1f1f'
+            }}
+          />
+
+          <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+            {filteredGems.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {filteredGems.map(gem => (
+                  <div 
+                    key={gem.id} 
+                    style={{ 
+                      padding: '10px', 
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      transition: 'background 0.2s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f3f4'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const emoji = prompt('Enter an emoji for this Gem:', gem.emoji || '💎');
+                        if (emoji !== null) updateEmoji(gem.id, emoji);
+                      }}
+                      style={{ 
+                        width: '36px', 
+                        height: '36px', 
+                        borderRadius: '10px', 
+                        background: gem.isFavorite ? '#fff4e5' : '#e8f0fe', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        marginRight: '12px',
+                        fontSize: '20px',
+                        flexShrink: 0,
+                        border: gem.isFavorite ? '1px solid #ffcc80' : '1px solid transparent'
+                      }}
+                      title="Click to change emoji"
+                    >
+                      {gem.emoji || '💎'}
+                    </div>
+                    <div 
+                      style={{ flex: 1, minWidth: 0 }}
+                      onClick={() => {
+                        window.location.href = `https://gemini.google.com/gem/${gem.id}`;
+                      }}
+                    >
+                      <div style={{ 
+                        fontSize: '14px', 
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {gem.name}
+                      </div>
+                      {gem.description && (
+                         <div style={{ 
+                          fontSize: '11px', 
+                          color: '#5f6368',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {gem.description}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(gem.id);
+                      }}
+                      style={{
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        color: gem.isFavorite ? '#f9ab00' : '#dadce0',
+                        padding: '4px',
+                        transition: 'transform 0.1s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                      {gem.isFavorite ? '★' : '☆'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: '#5f6368', fontSize: '14px', marginTop: '20px' }}>
+                No Gems found
+              </p>
+            )}
+          </div>
+
+          <div style={{ 
+            marginTop: '16px', 
+            fontSize: '11px', 
+            color: '#70757a', 
+            textAlign: 'center',
+            paddingTop: '12px',
+            borderTop: '1px solid #f1f3f4'
+          }}>
+            <kbd style={{ 
+              padding: '2px 6px', 
+              background: '#f1f3f4', 
+              border: '1px solid #dadce0',
+              borderRadius: '4px',
+              boxShadow: '0 1px 1px rgba(0,0,0,0.1)',
+              marginRight: '4px',
+              color: '#333'
+            }}>Ctrl</kbd> + <kbd style={{ 
+              padding: '2px 6px', 
+              background: '#f1f3f4', 
+              border: '1px solid #dadce0',
+              borderRadius: '4px',
+              boxShadow: '0 1px 1px rgba(0,0,0,0.1)',
+              color: '#333'
+            }}>.</kbd> to toggle
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
