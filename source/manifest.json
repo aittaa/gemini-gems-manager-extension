@@ -4,13 +4,13 @@
   "version": "0.0.1",
 
   "icons": {
-    "16": "assets/icons/favicon-16.png",
-    "32": "assets/icons/favicon-32.png",
-    "48": "assets/icons/favicon-48.png",
-    "128": "assets/icons/favicon-128.png"
+    "16": "assets/icons/icon.svg",
+    "32": "assets/icons/icon.svg",
+    "48": "assets/icons/icon.svg",
+    "128": "assets/icons/icon.svg"
   },
   "description": "Unlock and manage your Google Gemini Gems efficiently.",
-  "homepage_url": "https://github.com/unknown/gemini-gems-manager-extension",
+  "homepage_url": "https://github.com/aittaa/gemini-gems-manager-extension",
   "short_name": "Gems Manager",
 
   "permissions": [
@@ -32,7 +32,7 @@
     "extension_pages": "script-src 'self'; object-src 'self';"
   },
 
-  "__chrome|firefox__author": "Hyun Kim",
+  "__chrome|firefox__author": "Hyeon Kim",
 
   "__firefox__browser_specific_settings": {
     "gecko": {
@@ -46,10 +46,10 @@
   "action": {
     "default_popup": "Popup/popup.html",
     "default_icon": {
-      "16": "assets/icons/favicon-16.png",
-      "32": "assets/icons/favicon-32.png",
-      "48": "assets/icons/favicon-48.png",
-      "128": "assets/icons/favicon-128.png"
+      "16": "assets/icons/icon.svg",
+      "32": "assets/icons/icon.svg",
+      "48": "assets/icons/icon.svg",
+      "128": "assets/icons/icon.svg"
     },
     "default_title": "Gemini Gems Manager"
   },

@@ -36,4 +36,12 @@ Enhance your Google Gemini experience by unlocking powerful Gem management featu
 This project is not affiliated with Google. Since it uses internal traffic interception, Google's UI updates may occasionally affect functionality.
 
 ## 📄 License
+
 MIT
+
+
+
+---
+
+Developed based on the [web-extension-starter](https://github.com/abhijithvijayan/web-extension-starter) template.
+
