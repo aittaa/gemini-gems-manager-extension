@@ -1,13 +1,13 @@
 {
-  "name": "web-extension-starter",
-  "version": "3.0.0",
-  "description": "Web extension starter using react and typescript",
+  "name": "gemini-gems-manager-extension",
+  "version": "0.0.1",
+  "description": "Unlock and manage your Google Gemini Gems efficiently.",
   "private": true,
-  "repository": "https://github.com/abhijithvijayan/web-extension-starter.git",
+  "repository": "https://github.com/aittaa/gemini-gems-manager-extension.git",
   "author": {
-    "name": "abhijithvijayan",
-    "email": "email@abhijithvijayan.in",
-    "url": "https://abhijithvijayan.in"
+    "name": "Hyeon Kim",
+    "email": "hyeonkim.sub@gmail.com",
+    "url": "https://github.com/aittaa"
   },
   "license": "MIT",
   "engines": {
