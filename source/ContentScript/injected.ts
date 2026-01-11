@@ -1,6 +1,4 @@
 (function() {
-  const TARGET_RPCID = 'CNgdBe';
-
   function parseGemsData(responseText: string) {
     try {
       const cleanText = responseText.replace(/^\)\]\}\'\s*/, '');
@@ -15,31 +13,33 @@
         try {
           const data = JSON.parse(section);
           if (Array.isArray(data) && data[0] && data[0][0] === "wrb.fr") {
-            const rpcid = data[0][1];
+            const innerJsonString = data[0][2];
+            if (typeof innerJsonString !== 'string') continue;
 
-            if (rpcid === TARGET_RPCID) {
-              const innerJsonString = data[0][2];
-              if (typeof innerJsonString !== 'string') continue;
+            const innerData = JSON.parse(innerJsonString);
+            let gemsList = null;
+            
+            // Look for gems list structure regardless of rpcid
+            if (Array.isArray(innerData[2])) {
+              gemsList = innerData[2];
+            } else if (Array.isArray(innerData[1]) && Array.isArray(innerData[1][15])) {
+              gemsList = innerData[1][15];
+            }
 
-              const innerData = JSON.parse(innerJsonString);
-              let gemsList = null;
-              if (Array.isArray(innerData[2])) {
-                gemsList = innerData[2];
-              } else if (Array.isArray(innerData[1]) && Array.isArray(innerData[1][15])) {
-                gemsList = innerData[1][15];
-              }
-
-              if (Array.isArray(gemsList)) {
-                const gems = gemsList.map((item: any) => {
-                  if (!Array.isArray(item)) return null;
-                  const id = item[0];
-                  const meta = item[1];
-                  const name = Array.isArray(meta) ? meta[0] : 'Unknown Gem';
-                  let description = item[2];
-                  if (typeof description !== 'string') description = '';
-                  return { id, name, description };
-                }).filter(Boolean);
+            if (Array.isArray(gemsList) && gemsList.length > 0 && Array.isArray(gemsList[0]) && typeof gemsList[0][0] === 'string' && gemsList[0][0].length > 10) {
+              const gems = gemsList.map((item: any) => {
+                if (!Array.isArray(item)) return null;
+                const id = item[0];
+                const meta = item[1];
+                const name = Array.isArray(meta) && meta[0] ? meta[0] : null;
+                if (!name) return null; // Filter out if name is missing
                 
+                let description = item[2];
+                if (typeof description !== 'string') description = '';
+                return { id, name, description };
+              }).filter(Boolean);
+              
+              if (gems.length > 0) {
                 window.postMessage({ type: 'GEMS_INTERCEPTED', gems: gems }, '*');
               }
             }
@@ -53,7 +53,9 @@
   window.fetch = async function(...args) {
     const response = await originalFetch.apply(this, args);
     const url = args[0] instanceof Request ? args[0].url : args[0];
-    if (typeof url === 'string' && url.includes(`rpcids=${TARGET_RPCID}`)) {
+    
+    // Intercept all batchexecute requests instead of filtering by rpcids
+    if (typeof url === 'string' && url.includes('batchexecute')) {
       const cloned = response.clone();
       cloned.text().then(parseGemsData).catch(() => {});
     }
@@ -68,7 +70,8 @@
   };
   XMLHttpRequest.prototype.send = function() {
     const xhr = this as any;
-    if (typeof xhr._url === 'string' && xhr._url.includes(`rpcids=${TARGET_RPCID}`)) {
+    // Intercept all batchexecute requests
+    if (typeof xhr._url === 'string' && xhr._url.includes('batchexecute')) {
       this.addEventListener('load', () => {
         if (this.responseText) parseGemsData(this.responseText);
       });

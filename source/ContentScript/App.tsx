@@ -53,7 +53,16 @@ const App: React.FC = () => {
 
   const loadSettings = async () => {
     const result = await getStorage(['gems', 'favorites', 'emojiMap', 'options']);
-    setGems(result.gems || []);
+    let gemsList = result.gems || [];
+    
+    // Clean up any stale "Unknown Gem" data from storage
+    const validGems = gemsList.filter(g => g.name && g.name !== 'Unknown Gem');
+    if (validGems.length !== gemsList.length) {
+      setStorage({ gems: validGems });
+      gemsList = validGems;
+    }
+
+    setGems(gemsList);
     setFavorites(result.favorites || []);
     setEmojiMap(result.emojiMap || {});
     const pinned = result.options?.isPinned || false;
@@ -75,7 +84,10 @@ const App: React.FC = () => {
     const handleStorageChange = (changes: browser.Storage.StorageChange, area: string) => {
       if (area === 'local') {
         const anyChanges = changes as any;
-        if (anyChanges.gems) setGems(anyChanges.gems.newValue);
+        if (anyChanges.gems) {
+          const newGems = (anyChanges.gems.newValue as Gem[]).filter(g => g.name && g.name !== 'Unknown Gem');
+          setGems(newGems);
+        }
         if (anyChanges.favorites) setFavorites(anyChanges.favorites.newValue);
         if (anyChanges.emojiMap) setEmojiMap(anyChanges.emojiMap.newValue);
         if (anyChanges.options) {
@@ -139,7 +151,9 @@ const App: React.FC = () => {
   }, [gems, emojiMap]);
 
   const filteredGems = useMemo(() => {
-    let list = gems.map(gem => ({ ...gem, emoji: emojiMap[gem.id] || gem.emoji || '💎', isFavorite: favorites.includes(gem.id) }));
+    let list = gems
+      .filter(gem => gem.name && gem.name !== 'Unknown Gem') // Safety filter
+      .map(gem => ({ ...gem, emoji: emojiMap[gem.id] || gem.emoji || '💎', isFavorite: favorites.includes(gem.id) }));
     if (filterEmojiIndex > 0) {
       const targetEmoji = uniqueEmojis[filterEmojiIndex];
       list = list.filter(gem => gem.emoji === targetEmoji);
