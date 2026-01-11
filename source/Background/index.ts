@@ -1,10 +1,18 @@
 import browser from 'webextension-polyfill';
+import { ExtensionMessage } from '../types/messages';
+import { setStorage } from '../utils/storage';
 
 browser.runtime.onInstalled.addListener((): void => {
   console.log('Gemini Gems Manager installed');
 });
 
-// Future: Handle messages from content scripts for Gem data
 browser.runtime.onMessage.addListener((message: unknown) => {
-  console.log('Message received in background:', message);
+  const msg = message as ExtensionMessage;
+
+  if (msg.type === 'GEMS_UPDATED') {
+    console.log('[Background] Received Gems update:', msg.data);
+    setStorage({ gems: msg.data }).catch((err) => {
+      console.error('[Background] Failed to save Gems:', err);
+    });
+  }
 });
