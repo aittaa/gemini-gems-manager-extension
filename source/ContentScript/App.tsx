@@ -359,8 +359,17 @@ const App: React.FC = () => {
             )}
           </div>
 
-          <div style={{ marginTop: '20px', fontSize: '12px', color: theme.textSecondary, textAlign: 'center', paddingTop: '16px', borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
-            <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>Ctrl</kbd> + <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>.</kbd> to toggle
+          <div style={{ marginTop: '20px', fontSize: '12px', color: theme.textSecondary, textAlign: 'center', paddingTop: '16px', borderTop: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>↑↓</kbd> Select
+              <span style={{ margin: '0 4px', opacity: 0.5 }}>|</span>
+              <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>←→</kbd> Filter
+              <span style={{ margin: '0 4px', opacity: 0.5 }}>|</span>
+              <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>Enter</kbd> Open
+            </div>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', opacity: 0.8 }}>
+              <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>Ctrl</kbd> + <kbd style={{ padding: '2px 6px', background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '6px', boxShadow: '0 1px 1px rgba(0,0,0,0.1)', color: theme.text }}>.</kbd> to toggle
+            </div>
           </div>
         </div>
       )}
