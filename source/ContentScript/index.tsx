@@ -2,8 +2,6 @@ import browser from 'webextension-polyfill';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 
-console.warn('[Gems Manager] Content script loaded!');
-
 // Inject the interceptor script into the main world
 function injectScript(file: string) {
   try {
@@ -13,9 +11,8 @@ function injectScript(file: string) {
       (this as HTMLScriptElement).remove();
     };
     (document.head || document.documentElement).appendChild(script);
-    console.warn('[Gems Manager] Interceptor script injected:', file);
   } catch (e) {
-    console.error('[Gems Manager] Failed to inject script:', e);
+    // Ignore silent fail in production
   }
 }
 
@@ -46,7 +43,6 @@ function mountUI() {
 
   const root = createRoot(rootContainer);
   root.render(<App />);
-  console.warn('[Gems Manager] UI mounted.');
 }
 
 // Observe body to ensure host element is not removed by Gemini's SPA logic
