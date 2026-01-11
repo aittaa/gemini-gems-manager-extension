@@ -2,26 +2,31 @@ import {useEffect, useState} from 'react';
 import type {FC} from 'react';
 import {getStorage, setStorage} from '../utils/storage';
 import {Button} from '../components/Button/Button';
-import {Input} from '../components/Input/Input';
 import {Checkbox} from '../components/Checkbox/Checkbox';
-import {GitHubIcon} from '../components/icons/GitHubIcon';
 import styles from './Options.module.scss';
 
 const Options: FC = () => {
-  const [username, setUsername] = useState('');
-  const [enableLogging, setEnableLogging] = useState(false);
+  const [showInEmptyState, setShowInEmptyState] = useState(true);
+  const [showInChat, setShowInChat] = useState(true);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    getStorage(['username', 'enableLogging']).then((result) => {
-      setUsername(result.username);
-      setEnableLogging(result.enableLogging);
+    getStorage(['options']).then((result) => {
+      if (result.options) {
+        setShowInEmptyState(result.options.showInEmptyState);
+        setShowInChat(result.options.showInChat);
+      }
     });
   }, []);
 
   const handleSave = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    await setStorage({username, enableLogging});
+    await setStorage({
+      options: {
+        showInEmptyState,
+        showInChat,
+      }
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -29,31 +34,28 @@ const Options: FC = () => {
   return (
     <div className={styles.options}>
       <header className={styles.header}>
-        <h1>Extension Settings</h1>
-        <p>Configure your extension preferences</p>
+        <h1>Gemini Gems Manager Settings</h1>
+        <p>Configure your preferences</p>
       </header>
 
       <form onSubmit={handleSave} className={styles.form}>
         <div className={styles.section}>
-          <Input
-            label="Your Name"
-            id="username"
-            name="username"
-            placeholder="Enter your name"
-            spellCheck={false}
-            autoComplete="off"
-            value={username}
-            onChange={(e): void => setUsername(e.target.value)}
+          <Checkbox
+            id="showInEmptyState"
+            name="showInEmptyState"
+            label="Show Gems in empty state"
+            checked={showInEmptyState}
+            onChange={(e): void => setShowInEmptyState(e.target.checked)}
           />
         </div>
 
         <div className={styles.section}>
           <Checkbox
-            id="logging"
-            name="logging"
-            label="Show the features enabled on each page in the console"
-            checked={enableLogging}
-            onChange={(e): void => setEnableLogging(e.target.checked)}
+            id="showInChat"
+            name="showInChat"
+            label="Show Gems in chat screen"
+            checked={showInChat}
+            onChange={(e): void => setShowInChat(e.target.checked)}
           />
         </div>
 
@@ -64,18 +66,6 @@ const Options: FC = () => {
           {saved && <span className={styles.status}>Settings saved</span>}
         </div>
       </form>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://github.com/abhijithvijayan/web-extension-starter"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.githubLink}
-        >
-          <GitHubIcon size={18} />
-          <span>View on GitHub</span>
-        </a>
-      </footer>
     </div>
   );
 };
