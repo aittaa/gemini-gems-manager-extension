@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Gemini Gems Manager",
+  "name": "Gems Manager for Google Gemini",
   "version": "0.0.1",
 
   "icons": {
@@ -9,7 +9,7 @@
     "48": "assets/icons/icon.svg",
     "128": "assets/icons/icon.svg"
   },
-  "description": "Unlock and manage your Google Gemini Gems efficiently.",
+  "description": "Powerful Gems management tool for Google Gemini.",
   "homepage_url": "https://github.com/aittaa/gemini-gems-manager-extension",
   "short_name": "Gems Manager",
 
@@ -51,7 +51,7 @@
       "48": "assets/icons/icon.svg",
       "128": "assets/icons/icon.svg"
     },
-    "default_title": "Gemini Gems Manager"
+    "default_title": "Gems Manager for Google Gemini"
   },
 
   "__chrome__options_page": "Options/options.html",

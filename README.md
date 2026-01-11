@@ -1,6 +1,6 @@
-# Gemini Gems Manager
+# Gems Manager for Google Gemini
 
-Enhance your Google Gemini experience by unlocking powerful Gem management features. This extension adds a searchable, filterable, and customizable Gems list directly into the Gemini interface.
+Enhance your experience by unlocking powerful Gem management features. This extension adds a searchable, filterable, and customizable Gems list directly into the interface.
 
 ## ✨ Features
 

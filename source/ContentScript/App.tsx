@@ -188,14 +188,47 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleGlobalKeydown);
   }, [visible, editingGemId]);
 
-  const handleInputKeydown = (e: React.KeyboardEvent) => {
-    if (editingGemId) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); if (filteredGems.length > 0) setSelectedIndex(prev => (prev + 1) % filteredGems.length); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); if (filteredGems.length > 0) setSelectedIndex(prev => (prev - 1 + filteredGems.length) % filteredGems.length); }
-    else if (e.key === 'ArrowRight') { setFilterEmojiIndex(prev => (prev + 1) % uniqueEmojis.length); }
-    else if (e.key === 'ArrowLeft') { setFilterEmojiIndex(prev => (prev - 1 + uniqueEmojis.length) % uniqueEmojis.length); }
-    else if (e.key === 'Enter') { e.preventDefault(); if (filteredGems[selectedIndex]) window.location.href = `https://gemini.google.com/gem/${filteredGems[selectedIndex].id}`; }
-  };
+    const navigateToGem = (id: string) => {
+
+      // Detect session part (e.g., /u/1) from current URL to prevent account switching
+
+      const sessionMatch = window.location.pathname.match(/\/u\/(\d+)/);
+
+      const sessionPath = sessionMatch ? sessionMatch[0] : '';
+
+      
+
+      // Construct target URL preserving the session
+
+      const targetUrl = `https://gemini.google.com${sessionPath}/gem/${id}`;
+
+      window.location.href = targetUrl;
+
+    };
+
+  
+
+    const handleInputKeydown = (e: React.KeyboardEvent) => {
+
+      if (editingGemId) return;
+
+      if (e.key === 'ArrowDown') { e.preventDefault(); if (filteredGems.length > 0) setSelectedIndex(prev => (prev + 1) % filteredGems.length); }
+
+      else if (e.key === 'ArrowUp') { e.preventDefault(); if (filteredGems.length > 0) setSelectedIndex(prev => (prev - 1 + filteredGems.length) % filteredGems.length); }
+
+      else if (e.key === 'ArrowRight') { setFilterEmojiIndex(prev => (prev + 1) % uniqueEmojis.length); }
+
+      else if (e.key === 'ArrowLeft') { setFilterEmojiIndex(prev => (prev - 1 + uniqueEmojis.length) % uniqueEmojis.length); }
+
+      else if (e.key === 'Enter') {
+
+        e.preventDefault();
+
+        if (filteredGems[selectedIndex]) navigateToGem(filteredGems[selectedIndex].id);
+
+      }
+
+    };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -287,8 +320,7 @@ const App: React.FC = () => {
             {filteredGems.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '2px 0' }}>
                 {filteredGems.map((gem, index) => (
-                  <div key={gem.id} style={{ padding: '10px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s', backgroundColor: selectedIndex === index ? theme.accentHover : 'transparent', boxShadow: selectedIndex === index ? `inset 0 0 0 1px ${theme.border}` : 'none' }} onMouseMove={() => setSelectedIndex(index)} onClick={() => { window.location.href = `https://gemini.google.com/gem/${gem.id}`; }}>
-                    <div onClick={(e) => handleEmojiClick(e, gem.id)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: gem.isFavorite ? (isDark ? '#4f3500' : '#fff4e5') : theme.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', fontSize: '20px', flexShrink: 0, border: gem.isFavorite ? `1px solid ${isDark ? '#7e5700' : '#ffcc80'}` : '1px solid transparent' }} title="Click to change emoji">{gem.emoji}</div>
+                                      <div key={gem.id} style={{ padding: '10px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s', backgroundColor: selectedIndex === index ? theme.accentHover : 'transparent', boxShadow: selectedIndex === index ? `inset 0 0 0 1px ${theme.border}` : 'none' }} onMouseMove={() => setSelectedIndex(index)} onClick={() => { navigateToGem(gem.id); }}>                    <div onClick={(e) => handleEmojiClick(e, gem.id)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: gem.isFavorite ? (isDark ? '#4f3500' : '#fff4e5') : theme.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', fontSize: '20px', flexShrink: 0, border: gem.isFavorite ? `1px solid ${isDark ? '#7e5700' : '#ffcc80'}` : '1px solid transparent' }} title="Click to change emoji">{gem.emoji}</div>
                     <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: theme.text }}>{gem.name}</div>{gem.description && <div style={{ fontSize: '11px', color: theme.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{gem.description}</div>}</div>
                     <button onClick={(e) => { e.stopPropagation(); toggleFavorite(gem.id); }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '18px', color: gem.isFavorite ? '#f9ab00' : theme.border, padding: '4px', transition: 'transform 0.1s' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>{gem.isFavorite ? '★' : '☆'}</button>
                   </div>
