@@ -8,7 +8,7 @@ const App: React.FC = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [emojiMap, setEmojiMap] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState('');
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [isPinned, setIsPinned] = useState(false);
 
   useEffect(() => {
@@ -70,8 +70,8 @@ const App: React.FC = () => {
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       list = list.filter(gem => 
-        gem.name.toLowerCase().includes(lowerQuery) || 
-        (gem.description && gem.description.toLowerCase().includes(lowerQuery))
+        (gem.name && gem.name.toLowerCase().includes(lowerQuery)) || 
+        (typeof gem.description === 'string' && gem.description.toLowerCase().includes(lowerQuery))
       );
     }
 
@@ -200,7 +200,7 @@ const App: React.FC = () => {
                 <div 
                   style={{ flex: 1, minWidth: 0 }}
                   onClick={() => {
-                    window.location.href = `https://gemini.google.com/app?gem_id=${gem.id}`;
+                    window.location.href = `https://gemini.google.com/gem/${gem.id}`;
                   }}
                 >
                   <div style={{ 

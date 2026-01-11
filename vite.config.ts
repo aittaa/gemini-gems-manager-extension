@@ -22,6 +22,10 @@ function buildIIFEScripts(options: {
       for (const script of options.scripts) {
         await build({
           configFile: false,
+          define: {
+            'process.env.NODE_ENV': JSON.stringify(options.isDevelopment ? 'development' : 'production'),
+            'process.env': '{}',
+          },
           build: {
             write: true,
             outDir: options.outDir,
@@ -34,6 +38,7 @@ function buildIIFEScripts(options: {
                 entryFileNames: `assets/js/${script.name}.bundle.js`,
                 format: 'iife',
                 inlineDynamicImports: true,
+                intro: `var process = { env: { NODE_ENV: "${options.isDevelopment ? "development" : "production"}" } };`,
               },
             },
             lib: {
@@ -87,6 +92,7 @@ export default defineConfig(({ mode }) => {
 		define: {
 			__DEV__: isDevelopment,
 			__TARGET_BROWSER__: JSON.stringify(targetBrowser),
+			'process.env': {},
 		},
 
 		plugins: [
