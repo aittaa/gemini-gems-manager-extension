@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Sample WebExtension",
-  "version": "0.0.0",
+  "name": "Gemini Gems Manager",
+  "version": "0.0.1",
 
   "icons": {
     "16": "assets/icons/favicon-16.png",
@@ -9,9 +9,9 @@
     "48": "assets/icons/favicon-48.png",
     "128": "assets/icons/favicon-128.png"
   },
-  "description": "Sample description",
-  "homepage_url": "https://github.com/abhijithvijayan/web-extension-starter",
-  "short_name": "Sample Name",
+  "description": "Unlock and manage your Google Gemini Gems efficiently.",
+  "homepage_url": "https://github.com/unknown/gemini-gems-manager-extension",
+  "short_name": "Gems Manager",
 
   "permissions": [
     "activeTab",
@@ -20,23 +20,19 @@
 
   "optional_permissions": [],
 
-  "__chrome__host_permissions": [],
-
-  "__chrome__optional_host_permissions": [
-    "http://*/*",
-    "https://*/*"
+  "__chrome__host_permissions": [
+    "https://gemini.google.com/*"
   ],
 
-  "__firefox__optional_host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
+  "__chrome__optional_host_permissions": [],
+
+  "__firefox__optional_host_permissions": [],
 
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"
   },
 
-  "__chrome|firefox__author": "abhijithvijayan",
+  "__chrome|firefox__author": "Hyun Kim",
 
   "__firefox__browser_specific_settings": {
     "gecko": {
@@ -55,7 +51,7 @@
       "48": "assets/icons/favicon-48.png",
       "128": "assets/icons/favicon-128.png"
     },
-    "default_title": "tiny title"
+    "default_title": "Gemini Gems Manager"
   },
 
   "__chrome__options_page": "Options/options.html",
@@ -75,8 +71,7 @@
     {
       "run_at": "document_start",
       "matches": [
-        "http://*/*",
-        "https://*/*"
+        "https://gemini.google.com/*"
       ],
       "css": [],
       "js": [
@@ -88,7 +83,7 @@
   "web_accessible_resources": [
     {
       "resources": ["assets/*"],
-      "matches": ["http://*/*", "https://*/*"]
+      "matches": ["https://gemini.google.com/*"]
     }
   ]
 }
