@@ -7,6 +7,7 @@ export interface LocalStorage {
   options: {
     showInEmptyState: boolean;
     showInChat: boolean;
+    isPinned: boolean;
   };
 }
 
@@ -17,5 +18,6 @@ export const defaultStorage: LocalStorage = {
   options: {
     showInEmptyState: true,
     showInChat: true,
+    isPinned: false,
   },
 };

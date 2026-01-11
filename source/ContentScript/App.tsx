@@ -12,13 +12,22 @@ const App: React.FC = () => {
   const [isPinned, setIsPinned] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const loadSettings = async () => {
+    const result = await getStorage(['gems', 'favorites', 'emojiMap', 'options']);
+    setGems(result.gems || []);
+    setFavorites(result.favorites || []);
+    setEmojiMap(result.emojiMap || {});
+    
+    const pinned = result.options?.isPinned || false;
+    setIsPinned(pinned);
+    // If pinned, ensure it's visible
+    if (pinned) {
+      setVisible(true);
+    }
+  };
+
   useEffect(() => {
-    // Initial load
-    getStorage(['gems', 'favorites', 'emojiMap']).then((result) => {
-      setGems(result.gems || []);
-      setFavorites(result.favorites || []);
-      setEmojiMap(result.emojiMap || {});
-    });
+    loadSettings();
 
     // Listen for storage changes
     const handleStorageChange = (changes: browser.Storage.StorageChange, area: string) => {
@@ -27,12 +36,28 @@ const App: React.FC = () => {
         if (anyChanges.gems) setGems(anyChanges.gems.newValue);
         if (anyChanges.favorites) setFavorites(anyChanges.favorites.newValue);
         if (anyChanges.emojiMap) setEmojiMap(anyChanges.emojiMap.newValue);
+        if (anyChanges.options) {
+          const newPinned = anyChanges.options.newValue.isPinned;
+          setIsPinned(newPinned);
+          if (newPinned) setVisible(true);
+        }
       }
     };
+
+    // Watch for URL changes (SPA navigation)
+    let lastUrl = window.location.href;
+    const urlObserver = new MutationObserver(() => {
+      if (window.location.href !== lastUrl) {
+        lastUrl = window.location.href;
+        loadSettings(); // Re-sync settings on navigation
+      }
+    });
+    urlObserver.observe(document, { subtree: true, childList: true });
 
     browser.storage.onChanged.addListener(handleStorageChange);
     return () => {
       browser.storage.onChanged.removeListener(handleStorageChange);
+      urlObserver.disconnect();
     };
   }, []);
 
@@ -51,7 +76,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (!isPinned && visible && containerRef.current) {
-        // Use composedPath to detect clicks inside Shadow DOM correctly
         const path = event.composedPath();
         const isInside = path.includes(containerRef.current);
         const isToggleButton = (event.target as HTMLElement).closest('.gemini-gems-manager-toggle-btn');
@@ -72,6 +96,21 @@ const App: React.FC = () => {
       : [...favorites, id];
     setFavorites(newFavorites);
     setStorage({ favorites: newFavorites });
+  };
+
+  const togglePin = async () => {
+    const nextPinned = !isPinned;
+    setIsPinned(nextPinned);
+    
+    const { options } = await getStorage(['options']);
+    await setStorage({
+      options: {
+        ...(options || { showInEmptyState: true, showInChat: true }),
+        isPinned: nextPinned
+      }
+    });
+    // When pinning, make sure it stays visible
+    if (nextPinned) setVisible(true);
   };
 
   const updateEmoji = (id: string, emoji: string) => {
@@ -95,7 +134,6 @@ const App: React.FC = () => {
       );
     }
 
-    // Sort: Favorites first, then alphabetical
     return list.sort((a, b) => {
       if (a.isFavorite && !b.isFavorite) return -1;
       if (!a.isFavorite && b.isFavorite) return 1;
@@ -105,14 +143,13 @@ const App: React.FC = () => {
 
   return (
     <>
-      {/* Floating toggle button - Always visible */}
       <button 
         className="gemini-gems-manager-toggle-btn"
         onClick={() => setVisible(!visible)}
         title="Toggle Gems List (Ctrl + .)"
         style={{
           position: 'fixed',
-          top: '80px', // Lowered to avoid account icon
+          top: '80px',
           right: '20px',
           zIndex: 10000,
           width: '36px',
@@ -134,13 +171,12 @@ const App: React.FC = () => {
         💎
       </button>
 
-      {/* Main UI List */}
       {visible && (
         <div 
           ref={containerRef}
           style={{
             position: 'fixed',
-            top: '125px', // Adjusted to align with new button position
+            top: '125px',
             right: '20px',
             zIndex: 9999,
             background: '#ffffff',
@@ -161,7 +197,7 @@ const App: React.FC = () => {
             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 500 }}>Gemini Gems</h3>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button 
-                onClick={() => setIsPinned(!isPinned)}
+                onClick={togglePin}
                 title={isPinned ? "Unpin" : "Pin UI"}
                 style={{ 
                   border: 'none', 

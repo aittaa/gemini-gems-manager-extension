@@ -21,8 +21,10 @@ const Options: FC = () => {
 
   const handleSave = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    const { options } = await getStorage(['options']);
     await setStorage({
       options: {
+        ...(options || { isPinned: false }),
         showInEmptyState,
         showInChat,
       }
