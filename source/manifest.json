@@ -82,7 +82,7 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["assets/*"],
+      "resources": ["assets/*", "assets/js/injected.bundle.js"],
       "matches": ["https://gemini.google.com/*"]
     }
   ]
