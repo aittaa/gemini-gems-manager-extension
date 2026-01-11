@@ -1,4 +1,6 @@
 import browser from 'webextension-polyfill';
+import { createRoot } from 'react-dom/client';
+import App from './App';
 
 console.log('Gemini Gems Manager content script loaded');
 
@@ -14,6 +16,40 @@ function injectScript(file: string) {
 }
 
 injectScript('assets/js/injected.bundle.js');
+
+// Mount React App in Shadow DOM
+function mountUI() {
+  const hostId = 'gemini-gems-manager-host';
+  if (document.getElementById(hostId)) return;
+
+  const host = document.createElement('div');
+  host.id = hostId;
+  host.style.position = 'absolute';
+  host.style.top = '0';
+  host.style.left = '0';
+  host.style.zIndex = '99999';
+  host.style.pointerEvents = 'none'; // Let clicks pass through unless on UI
+
+  document.body.appendChild(host);
+
+  const shadow = host.attachShadow({ mode: 'open' });
+  
+  // Container for React App
+  const rootContainer = document.createElement('div');
+  // Enable pointer events for the UI container itself
+  rootContainer.style.pointerEvents = 'auto'; 
+  shadow.appendChild(rootContainer);
+
+  const root = createRoot(rootContainer);
+  root.render(<App />);
+}
+
+// Wait for body to be available
+if (document.body) {
+  mountUI();
+} else {
+  document.addEventListener('DOMContentLoaded', mountUI);
+}
 
 // Listen for messages from the injected script
 window.addEventListener('message', (event) => {

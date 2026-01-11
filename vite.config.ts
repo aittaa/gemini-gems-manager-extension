@@ -116,7 +116,7 @@ export default defineConfig(({ mode }) => {
 				scripts: [
 					{
 						name: 'contentScript',
-						entry: path.resolve(sourcePath, 'ContentScript/index.ts'),
+						entry: path.resolve(sourcePath, 'ContentScript/index.tsx'),
 					},
 					{
 						name: 'injected',
