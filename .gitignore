@@ -199,3 +199,6 @@ dist/
 !.yarn/releases
 !.yarn/plugins
 .pnp.*
+
+# for local
+.dev
