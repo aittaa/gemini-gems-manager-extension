@@ -14,7 +14,6 @@
   "short_name": "Gems Manager",
 
   "permissions": [
-    "activeTab",
     "storage"
   ],
 
