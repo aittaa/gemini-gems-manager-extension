@@ -1,6 +1,6 @@
 {
   "name": "gems-manager-extension",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Powerful Gems management tool for Google Gemini.",
   "private": true,
   "repository": "https://github.com/aittaa/gemini-gems-manager-extension.git",
