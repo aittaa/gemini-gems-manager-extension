@@ -3,7 +3,7 @@ import browser from 'webextension-polyfill';
 import { getStorage, setStorage } from '../utils/storage';
 import { Gem } from '../types/messages';
 
-const COMMON_EMOJIS = ['💎', '⭐', '🔥', '🧠', '✍️', '🎨', '🚀', '📊', '💻', '💡', '✅', '❤️', '🍀', '🎯'];
+const COMMON_EMOJIS = ['💎', '⭐', '🔥', '🧠', '✍️', '🎨', '🚀', '📊', '💻', '💡', '✅', '❤️', '🍀', '🎯', '✨', '🤖', '📚', '🛠️', '📝', '🌐', '💬', '🔍'];
 
 const EmojiPicker: React.FC<{
   onSelect: (emoji: string) => void;
