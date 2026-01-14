@@ -2,7 +2,7 @@ import type {FC} from 'react';
 import styles from './Popup.module.scss';
 
 const Popup: FC = () => {
-  const isMac = typeof window !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+  const isMac = typeof window !== 'undefined' && /Mac/.test(navigator.userAgent);
   const cmdKey = isMac ? '⌘' : 'Ctrl';
 
   return (
