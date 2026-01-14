@@ -11,5 +11,7 @@ browser.runtime.onMessage.addListener((message: unknown) => {
 
   if (msg.type === 'GEMS_UPDATED') {
     setStorage({ gems: msg.data }).catch(() => {});
+  } else if (msg.type === 'OPEN_URL') {
+    browser.tabs.create({ url: msg.url, active: msg.active }).catch(() => {});
   }
 });

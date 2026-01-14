@@ -203,15 +203,20 @@ const App: React.FC = () => {
   }, [visible, editingGemId]);
 
     const openGem = (id: string, newTab: boolean) => {
-      // Detect session part (e.g., /u/1) from current URL to prevent account switching
       const sessionMatch = window.location.pathname.match(/\/u\/(\d+)/);
       const sessionPath = sessionMatch ? sessionMatch[0] : '';
-      
-      // Construct target URL preserving the session
       const targetUrl = `https://gemini.google.com${sessionPath}/gem/${id}`;
 
       if (newTab) {
-        window.open(targetUrl, '_blank');
+        // Open in background tab
+        browser.runtime.sendMessage({
+          type: 'OPEN_URL',
+          url: targetUrl,
+          active: false
+        }).catch(() => {
+          // Fallback if background script is not ready
+          window.open(targetUrl, '_blank');
+        });
       } else {
         window.location.href = targetUrl;
       }
