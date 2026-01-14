@@ -1,47 +1,43 @@
 # Gems Manager for Google Gemini
 
-Enhance your experience by unlocking powerful Gem management features. This extension adds a searchable, filterable, and customizable Gems list directly into the interface.
+A browser extension to manage Google Gemini Gems with search, filtering, and customization features.
 
-## ✨ Features
+[**Install from Chrome Web Store**](https://chromewebstore.google.com/detail/gems-manager-for-google-g/pcablbaheiglbmemffjpnpabapkeceig)
 
--   **🔍 Instant Gem Search:** Find any Gem instantly with a real-time search bar.
--   **⭐ Favorites:** Pin your most-used Gems to the top of the list for quick access.
--   **🎨 Custom Emoji Mapping:** Assign your own emojis to each Gem to make them easily recognizable.
--   **🏷️ Icon Filter Bar:** Quickly filter Gems by their assigned emojis using the horizontal filter bar.
--   **⌨️ Full Keyboard Support:**
-    -   `Ctrl + .` (or `Cmd + .`) to toggle the UI.
-    -   `↑ / ↓` to select a Gem.
-    -   `← / →` to switch emoji filters.
-    -   `Enter` to open the selected Gem.
-    -   `Esc` to close the UI.
--   **📌 Pin UI:** Keep the Gems list always visible while you chat.
--   **🌗 Dark Mode Support:** Automatically matches Gemini's native theme.
+## Features
 
-## 🛠 Installation
+-   **Search:** Real-time search bar for quick Gem access.
+-   **Favorites:** Pin frequently used Gems to the top.
+-   **Customization:** Assign custom emojis to individual Gems.
+-   **Filtering:** Filter Gems by emoji category via the filter bar.
+-   **Navigation:**
+    -   `Ctrl + .`: Toggle UI
+    -   `↑ / ↓`: Select Gem
+    -   `← / →`: Switch emoji filters
+    -   `Enter`: Open in current tab
+    -   `Ctrl + Enter`: Open in background tab
+    -   `Esc`: Close UI
+-   **Display:** Pinned mode to keep the list visible during chat.
+-   **Theming:** Automatic dark mode support matching Gemini's interface.
 
-### For Development
-1. Clone this repository.
-2. Run `npm install` to install dependencies.
-3. Run `npm run build:chrome` to build the extension.
-4. Open Chrome and go to `chrome://extensions/`.
-5. Enable "Developer mode" and click "Load unpacked".
-6. Select the `extension/chrome` folder.
+## Installation
 
-## 🔒 Privacy & Safety
--   **No Official API needed:** This extension intercepts existing data traffic safely within your browser.
--   **Privacy Focused:** Your Gems data never leaves your browser. All settings are stored locally.
--   **Lightweight:** Minimal impact on browser performance.
+### From Source
+1. Clone the repository.
+2. Install dependencies: `npm install`.
+3. Build for Chrome: `npm run build:chrome`.
+4. Load unpacked extension from the `extension/chrome` directory in `chrome://extensions/`.
 
-## 📝 Note
-This project is not affiliated with Google. Since it uses internal traffic interception, Google's UI updates may occasionally affect functionality.
+## Privacy & Security
 
-## 📄 License
+-   **Data Interception:** Operates by intercepting internal traffic; no official API keys required.
+-   **Local Storage:** All data and settings are stored locally within the browser.
+-   **Performance:** Lightweight implementation with minimal overhead.
+
+## License
 
 MIT
 
-
-
 ---
-
 Developed based on the [web-extension-starter](https://github.com/abhijithvijayan/web-extension-starter) template.
 
