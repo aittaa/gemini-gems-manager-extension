@@ -2,9 +2,6 @@ import type {FC} from 'react';
 import styles from './Popup.module.scss';
 
 const Popup: FC = () => {
-  const isMac = typeof window !== 'undefined' && /Mac/.test(navigator.userAgent);
-  const cmdKey = isMac ? '⌘' : 'Ctrl';
-
   return (
     <section className={styles.popup}>
       <header className={styles.header}>
@@ -48,7 +45,7 @@ const Popup: FC = () => {
 
             <div className={styles.shortcutItem}>
               <div className={styles.keyLabel}>
-                <kbd className={styles.key}>{cmdKey}</kbd>
+                <kbd className={styles.key}>Ctrl</kbd>
                 <span style={{ color: '#dadce0' }}>+</span>
                 <kbd className={styles.key}>Enter</kbd>
               </div>
