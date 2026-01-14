@@ -108,3 +108,56 @@
   font-weight: variables.$bold;
   color: variables.$primary;
 }
+
+.shortcuts {
+  margin-top: 20px;
+}
+
+.shortcutTitle {
+  font-size: 13px;
+  font-weight: variables.$semibold;
+  color: variables.$skyBlue;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.shortcutList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.shortcutItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: variables.$black;
+}
+
+.keyLabel {
+  display: flex;
+  gap: 4px;
+}
+
+.key {
+  padding: 2px 6px;
+  background: variables.$greyWhite;
+  border: 1px solid variables.$border;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  color: variables.$primary;
+  min-width: 20px;
+  text-align: center;
+}
+
+.description {
+  color: variables.$skyBlue;
+  font-size: 12px;
+}
