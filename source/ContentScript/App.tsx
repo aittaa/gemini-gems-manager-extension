@@ -5,6 +5,11 @@ import { Gem } from '../types/messages';
 
 const COMMON_EMOJIS = ['💎', '⭐', '🔥', '🧠', '✍️', '🎨', '🚀', '📊', '💻', '💡', '✅', '❤️', '🍀', '🎯', '✨', '🤖', '📚', '🛠️', '📝', '🌐', '💬', '🔍'];
 
+const isValidGem = (gem: Gem) => {
+  const id = gem.id?.toLowerCase() || '';
+  return Boolean(gem.name && gem.name !== 'Unknown Gem' && !id.includes('notebook'));
+};
+
 const EmojiPicker: React.FC<{
   onSelect: (emoji: string) => void;
   onClose: () => void;
@@ -56,7 +61,7 @@ const App: React.FC = () => {
     let gemsList = result.gems || [];
     
     // Clean up any stale "Unknown Gem" data from storage
-    const validGems = gemsList.filter(g => g.name && g.name !== 'Unknown Gem');
+    const validGems = gemsList.filter(isValidGem);
     if (validGems.length !== gemsList.length) {
       setStorage({ gems: validGems });
       gemsList = validGems;
@@ -85,7 +90,7 @@ const App: React.FC = () => {
       if (area === 'local') {
         const anyChanges = changes as any;
         if (anyChanges.gems) {
-          const newGems = (anyChanges.gems.newValue as Gem[]).filter(g => g.name && g.name !== 'Unknown Gem');
+          const newGems = (anyChanges.gems.newValue as Gem[]).filter(isValidGem);
           setGems(newGems);
         }
         if (anyChanges.favorites) setFavorites(anyChanges.favorites.newValue);
@@ -152,7 +157,7 @@ const App: React.FC = () => {
 
   const filteredGems = useMemo(() => {
     let list = gems
-      .filter(gem => gem.name && gem.name !== 'Unknown Gem') // Safety filter
+      .filter(isValidGem)
       .map(gem => ({ ...gem, emoji: emojiMap[gem.id] || gem.emoji || '💎', isFavorite: favorites.includes(gem.id) }));
     if (filterEmojiIndex > 0) {
       const targetEmoji = uniqueEmojis[filterEmojiIndex];
